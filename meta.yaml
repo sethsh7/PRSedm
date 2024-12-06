@@ -1,0 +1,61 @@
+package:
+  name: prsedm
+  version: "1.0.0"
+
+source:
+  path: .
+
+build:
+  number: 0
+  script: "{{ PYTHON }} -m pip install . --no-deps --ignore-installed -v"
+
+requirements:
+  host:
+    - python >=3.10
+    - numpy >=1.21,<2.0
+    - pip
+    - bzip2 >=1.0.8,<2.0a0
+    - libcurl >=8.8.0,<9.0a0
+    - libdeflate >=1.20,<1.22.0a0
+    - libgcc >=12
+    - libzlib >=1.2.13,<2.0a0
+    - openssl >=3.3.2,<4.0a0
+    - xz >=5.2.6,<6.0a0
+  run:
+    - python >=3.10
+    - numpy >=1.21,<2.0
+    - joblib >=1.3
+    - pandas >=2.2
+    - pysam >=0.22
+    - bzip2 >=1.0.8,<2.0a0
+    - libcurl >=8.8.0,<9.0a0
+    - libdeflate >=1.20,<1.22.0a0
+    - libgcc >=12
+    - libzlib >=1.2.13,<2.0a0
+    - openssl >=3.3.2,<4.0a0
+    - xz >=5.2.6,<6.0a0
+
+test:
+  imports:
+    - prsedm
+    - prsedm.extensions.score_dm
+  commands:
+    - prsedm --help  # Test the CLI entry point
+
+extra:
+  channels:
+    - bioconda
+    - conda-forge
+
+about:
+  home: https://github.com/sethsh7/PRSedm  # Replace with your GitHub repository URL
+  license: MIT  # Replace with the actual license if different
+  license_family: MIT
+  summary: >
+    PRSedm (Polygenic Risk Score Extension for Diabetes Mellitus) is a package
+    for local and remote generation of Polygenic Risk Scores (PRS) for Diabetes Mellitus (DM).
+  description: |
+    PRSedm is a Python package designed to calculate Polygenic Risk Scores (PRS)
+    specifically tailored for Diabetes Mellitus (DM). It supports both local computation
+    and remote workflows, ensuring flexibility and ease of use.
+  dev_url: https://github.com/sethsh7/PRSedm  # Replace with your GitHub repository URL

@@ -1,0 +1,143 @@
+{
+    "t2d-mahajan22-ma": {
+        "method": "additive",
+        "db_table": "t2d_mahajan22_ma",
+        "min": 0,
+        "max": 41.458993252
+    },
+    "t2dp-suzuki24-ma": {
+        "method": "grouped",
+        "db_table": "t2dp_suzuki24_ma",
+        "min": 0,
+        "max": 114.74481968590304
+    },
+    "t2dp-suzuki24-eur": {
+        "method": "grouped",
+        "db_table": "t2dp_suzuki24_eur",
+        "min": -14.4158,
+        "max": 122.7158
+    },
+    "t2dp-suzuki24-afr": {
+        "method": "grouped",
+        "db_table": "t2dp_suzuki24_afr",
+        "min": -18.5076,
+        "max": 105.0188
+    },
+    "t2dp-suzuki24-eas": {
+        "method": "grouped",
+        "db_table": "t2dp_suzuki24_eas",
+        "min": -36.8316,
+        "max": 144.8812
+    },
+    "t2dp-suzuki24-sas": {
+        "method": "grouped",
+        "db_table": "t2dp_suzuki24_sas",
+        "min": -27.5378,
+        "max": 105.321
+    },
+    "t2dp-suzuki24-safr": {
+        "method": "grouped",
+        "db_table": "t2dp_suzuki24_safr",
+        "min": -143.23408,
+        "max": 194.71106
+    },
+    "t2dp-suzuki24-his": {
+        "method": "grouped",
+        "db_table": "t2dp_suzuki24_his",
+        "min": -35.3812,
+        "max": 114.9488
+    },
+    "t2dp-smith24-ma": {
+        "method": "grouped",
+        "db_table": "t2dp_smith24_ma",
+        "min": 0,
+        "max": 923.948480044
+    },
+    "t2dp-smith24-eur": {
+        "method": "grouped",
+        "db_table": "t2dp_smith24_eur",
+        "min": 0,
+        "max": 1174.307862122
+    },
+    "t2dp-smith24-afr": {
+        "method": "grouped",
+        "db_table": "t2dp_smith24_afr",
+        "min": 0,
+        "max": 209.423006994
+    },
+    "t2dp-smith24-eas": {
+        "method": "grouped",
+        "db_table": "t2dp_smith24_eas",
+        "min": 0,
+        "max": 402.913593058
+    },
+    "t2dp-smith24-amr": {
+        "method": "grouped",
+        "db_table": "t2dp_smith24_amr",
+        "min": 0,
+        "max": 98.916750556
+    },
+    "t2dp-kim23": {
+        "method": "grouped",
+        "db_table": "t2dp_kim23",
+        "min": 0,
+        "max": 741.45646037
+    },
+    "t2dp-udler18": {
+        "method": "grouped",
+        "db_table": "t2dp_udler18",
+        "min": 0,
+        "max": 211.72
+    },
+    "t1dgrs2-sharp24": {
+        "method": "hla_int",
+        "db_table": "t1dgrs2_additive24",
+        "db_dq": "t1dgrs2_dq24",
+        "db_int": "t1dgrs2_hlainteraction",
+        "db_rank": "hla_ranking_klitz",
+        "min": -17.15055452,
+        "max": 37.412269419
+    },
+    "t1dgrs2-sharp21": {
+        "method": "hla_int",
+        "db_table": "t1dgrs2_additive21",
+        "db_dq": "t1dgrs2_dq21",
+        "db_int": "t1dgrs2_hlainteraction",
+        "db_rank": "hla_ranking_klitz",
+        "min": -17.15055452,
+        "max": 37.412269419
+    },
+    "t1dgrs2-sharp19": {
+        "method": "hla_int",
+        "db_table": "t1dgrs2_additive19",
+        "db_dq": "t1dgrs2_dq19",
+        "db_int": "t1dgrs2_hlainteraction",
+        "db_rank": "hla_ranking_klitz",
+        "min": -17.15055452,
+        "max": 37.412269419
+    },
+    "t1dgrs2-broad": {
+        "method": "hla_int",
+        "db_table": "t1dgrs2_additive_broad",
+        "db_dq": "t1dgrs2_dq_broad",
+        "db_int": "t1dgrs2_hlainteraction",
+        "db_rank": "hla_ranking_klitz",
+        "min": -17.39632452,
+        "max": 37.206521419
+    },
+    "t1dgrs2-qu22": {
+        "method": "hla_int",
+        "db_table": "t1dgrs2_additive_qu22",
+        "db_dq": "t1dgrs2_dq19",
+        "db_int": "t1dgrs2_hlainteraction",
+        "db_rank": "hla_ranking_klitz",
+        "min": -17.47655452,
+        "max": 41.330269419000004
+    },
+    "t1d-onengut19-afr": {
+        "method": "additive",
+        "db_table": "t1d_onengut19_afr",
+        "min": 0,
+        "max": 14.972
+    }
+}
