@@ -165,7 +165,7 @@ def main():
     args = parser.parse_args()
     logging.info("Parsed command line arguments.")
 
-    if args.impute and not args.refbcf:
+    if args.impute and not args.refvcf:
         parser.error("--ref-dir is required if imputation is enabled.")
 
     try:
