@@ -41,12 +41,12 @@ To call PRSedm from the command line:
 prsedm --vcf <path_to_vcf_file> [options]
 ```
 
-- `--vcf` *(required)*: Path to an indexed VCF (.gz/.bgz) or BCF file, or a text file mapping one file per contig.
+- `--vcf` *(required)*: Path to an indexed VCF (.gz/.bgz) or BCF file, or a text file mapping one VCF per contig.
 - `--col`: Genotype column to score (default: `GT`, options: `GT` for WGS, `GP` for imputed data).
 - `--build`: Genome build to use (default: `hg38`, options: `hg19`, `hg38`).
 - `--prsflags` *(required)*: Comma-separated list of PRS to generate, e.g., `PRS1,PRS2`.
 - `--impute` *(optional)*: Enable imputation (requires `--refvcf`) (default: `1`).
-- `--refvcf` *(optional)*: Reference directory (required if imputation is enabled).
+- `--refvcf` *(optional)*: Path to indexed reference VCF/BCF(.gz/.bgz), or text file mapping one VCF/BCF per contig (required if impute=1).
 - `--norm` *(optional)*: Perform fixed MinMax normalization (default: `1`).
 - `--parallel` *(optional)*: Enable parallel processing (default: `1`).
 - `--ntasks` *(optional)*: Number of tasks to use for parallel processing (default: CPU count).
@@ -86,7 +86,7 @@ PRS schematics are stored in a SQLlite database (variants.db) and accessed via a
 
 | Flag              | Method                        | Variants | Description                                                                                                                 | PMID                                                   |
 | ----------------- | ----------------------------- | -------- | --------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------ |
-| t1dgrs2-sharp24   | HLA Interaction + Partitioned | 67       | "GRS2x" updated PRS with widest compatibility and HLA-based risk pPS.                                                       | TBA                                                    |
+| t1dgrs2-sharp24   | HLA Interaction + Partitioned | 67       | "GRS2x" updated PRS with widest compatibility and HLA-based risk pPS.                                                       | [Medrxiv](https://www.medrxiv.org/content/10.1101/2025.01.16.25320691v1)                                                    |
 | t1dgrs2-qu22      | HLA Interaction + Partitioned | 71       | Original "GRS2" PRS with the addition of 4 African ancestry SNPs from Onengut, proposed in Qu et al and utilized in eMERGE. | [34997821](https://pubmed.ncbi.nlm.nih.gov/34997821/)  |
 | t1dgrs2-sharp21   | HLA Interaction + Partitioned | 67       | Version of "GRS2" PRS designed for "TOPMED-R2" from 2021 GitHub.                                                            | [35312757](https://pubmed.ncbi.nlm.nih.gov/35312757/)  |
 | t1d-onengut19-afr | Additive                      | 6        | African-ancestry PRS proposed by Onengut in 2019, updated for modern compatibility.                                         | [30659077](https://pubmed.ncbi.nlm.nih.gov/30659077/)  |
