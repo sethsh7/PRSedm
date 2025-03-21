@@ -64,10 +64,10 @@ def process_flag(flag, meta, db_path, config, norm=False):
     return result
 
 
-def gen_dm(vcf, col, prsflags, build="hg38", impute=False, refvcf=None,
+def gen_dm(vcf, col, prsflags, build="hg38", impute=False, refbcf=None,
            norm=False, parallel=False, ntasks=os.cpu_count(), batch_size=1):
     """Generate DM-related PRS scores using a configuration object."""
-    if impute and not refvcf:
+    if impute and not refbcf:
         raise ValueError(
             "Reference directory is required if imputation is enabled.")
 
@@ -79,7 +79,7 @@ def gen_dm(vcf, col, prsflags, build="hg38", impute=False, refvcf=None,
         col=col,
         build=build,
         impute=impute,
-        refbcf=refvcf,
+        refbcf=refbcf,
         parallel=parallel,
         ntasks=ntasks,
         batch_size=batch_size
@@ -165,8 +165,8 @@ def main():
     args = parser.parse_args()
     logging.info("Parsed command line arguments.")
 
-    if args.impute and not args.refbcf:
-        parser.error("--ref-dir is required if imputation is enabled.")
+    if args.impute and not args.refvcf:
+        parser.error("--refvcf is required if imputation is enabled.")
 
     try:
         # Call the gen_dm function with parsed CLI arguments
@@ -176,7 +176,7 @@ def main():
             prsflags=args.scores,
             build=args.build,
             impute=args.impute,
-            refvcf=args.refvcf,
+            refbcf=args.refvcf,
             norm=args.norm,
             parallel=args.parallel,
             ntasks=args.ntasks,
@@ -191,7 +191,6 @@ def main():
     except Exception as e:
         logging.error(f"Error during PRS generation: {e}", exc_info=True)
         raise  # Re-raise the exception for further handling if needed
-
 
 if __name__ == "__main__":
     main()

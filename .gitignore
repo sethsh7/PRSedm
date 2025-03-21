@@ -3,7 +3,7 @@ __pycache__/
 *.py[cod]
 
 # Custom
-privatescripts/
+private/
 
 # Distribution / packaging
 .Python
@@ -86,3 +86,6 @@ logs/
 Thumbs.db
 ehthumbs.db
 Desktop.ini
+
+# Ignore custom directory
+PBC_for_SQL/
