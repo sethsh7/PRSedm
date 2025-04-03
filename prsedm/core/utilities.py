@@ -32,10 +32,16 @@ def configure_logging():
     log_file = f"{__name__}.log"
     """Configure logging with both file and stream handlers."""
     log_path = os.path.join(os.path.dirname(__file__), "..", log_file)
+
+    if os.access(os.path.dirname(log_path), os.W_OK):
+        log_handlers = [logging.FileHandler(log_path), logging.StreamHandler()]
+    else:
+        log_handlers = [logging.StreamHandler()]
+
     logging.basicConfig(
         level=logging.INFO,
         format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-        handlers=[logging.FileHandler(log_path), logging.StreamHandler()]
+        handlers=log_handlers
     )
 
 
