@@ -29,7 +29,7 @@ class PRSConfig:
 
 
 def configure_logging():
-    log_file = "f{__name__}.log"
+    log_file = f"{__name__}.log"
     """Configure logging with both file and stream handlers."""
     log_path = os.path.join(os.path.dirname(__file__), "..", log_file)
     logging.basicConfig(
