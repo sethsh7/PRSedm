@@ -75,8 +75,9 @@ file2.chr2.vcf.gz   chr2
 ## Research Analysis Platforms (RAP's)
 
 Remote deployment to remote Research Analysis Platforms (RAP's) is possible via notebook wrappers:
-- All of Us - [Notebook Here](https://github.com/sethsh7/PRSedm/blob/main/notebooks/PRSedm-AllofUS-notebook.ipynb)
-- UK Biobank - Notebook not yet available
+- All of Us (WGS) - [Notebook Here](https://github.com/sethsh7/PRSedm/blob/main/notebooks/PRSedm-AllofUS-notebook.ipynb)
+- UK Biobank (imputed WGS)- [Notebook Here](https://github.com/sethsh7/PRSedm/blob/main/notebooks/PRSedm-DNAnexus-WGS-notebook.ipynb)
+- UK Biobank (imputed array)  - [Notebook Here](https://github.com/sethsh7/PRSedm/blob/main/notebooks/PRSedm-DNAnexus-imputed-notebook.ipynb)
 
 ## Available PRS
 
