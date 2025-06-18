@@ -29,13 +29,22 @@ class PRSConfig:
 
 
 def configure_logging():
-    log_file = "f{__name__}.log"
     """Configure logging with both file and stream handlers."""
+    log_file = f"{__name__}.log"
     log_path = os.path.join(os.path.dirname(__file__), "..", log_file)
+
+    handlers = [logging.StreamHandler()]
+
+    try:
+        file_handler = logging.FileHandler(log_path)
+        handlers.insert(0, file_handler)
+    except (OSError, IOError) as e:
+        print(f"Warning: Could not write to log file '{log_path}'. Using console logging only. ({e})")
+
     logging.basicConfig(
         level=logging.INFO,
         format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-        handlers=[logging.FileHandler(log_path), logging.StreamHandler()]
+        handlers=handlers
     )
 
 
@@ -60,11 +69,11 @@ def check_bed_type(bed):
 
 
 def read_bcf_mapping(file_path):
-    """Read bcf-to-contig mapping from a text file."""
+    """Read contig-to-bcf mapping from a text file."""
     bcf_files = {}
     with open(file_path, 'r') as f:
         for line in f:
-            filename, contig = line.strip().split()
+            contig, filename = line.strip().split()
             bcf_files[contig] = filename
     return bcf_files
 
@@ -127,7 +136,7 @@ def normalize_bed_contigs(snplist, bcf_file):
 
 def read_whitespace(file):
     """Read a whitespace-separated file into a DataFrame."""
-    return pd.read_csv(file, header=None, sep=r'\t|\s{4}', engine='python')
+    return pd.read_csv(file, header=None, delim_whitespace=True, engine='python')
 
 
 def save_csv_plain(df, file):

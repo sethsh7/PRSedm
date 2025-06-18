@@ -40,8 +40,6 @@ def process_flag(flag, meta, db_path, config, norm=False):
     else:
         logging.info(f"Generating additive scores for {flag}")
         result = score_bcf(**asdict(config), bed=score)
-        return pd.DataFrame(
-            {f"{flag}_total": result.select_dtypes('number').sum(axis=1)})
 
     # Add the 'flag_total' column
     result = pd.concat([result, result.select_dtypes(
@@ -64,7 +62,7 @@ def process_flag(flag, meta, db_path, config, norm=False):
     return result
 
 
-def gen_dm(vcf, col, prsflags, build="hg38", impute=False, refbcf=None,
+def gen_dm(vcf, col, scores, build="hg38", impute=False, refbcf=None,
            norm=False, parallel=False, ntasks=os.cpu_count(), batch_size=1):
     """Generate DM-related PRS scores using a configuration object."""
     if impute and not refbcf:
@@ -93,7 +91,7 @@ def gen_dm(vcf, col, prsflags, build="hg38", impute=False, refbcf=None,
 
     # Process each flag and collect outputs
     outputs = []
-    for flag in prsflags.split(","):
+    for flag in scores.split(","):
         if flag not in meta:
             logging.warning(f"Flag '{flag}' not found in metadata. Skipping.")
             continue
@@ -173,7 +171,7 @@ def main():
         result = gen_dm(
             vcf=args.vcf,
             col=args.col,
-            prsflags=args.scores,
+            scores=args.scores,
             build=args.build,
             impute=args.impute,
             refbcf=args.refvcf,

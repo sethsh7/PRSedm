@@ -1,5 +1,5 @@
 # scoreprs/__init__.py
-__version__ = '1.0.1a'
+__version__ = '1.0.3'
 __author__ = 'Seth A. Sharp'
 __email__ = 'ssharp@stanford.edu'
 
