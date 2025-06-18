@@ -89,10 +89,10 @@
         "min": 0,
         "max": 211.72
     },
-    "t1dgrs2-sharp24": {
+    "t1dgrs2-luckett25": {
         "method": "hla_int",
-        "db_table": "t1dgrs2_additive24",
-        "db_dq": "t1dgrs2_dq24",
+        "db_table": "t1dgrs2_additive25",
+        "db_dq": "t1dgrs2_dq25",
         "db_int": "t1dgrs2_hlainteraction",
         "db_rank": "hla_ranking_klitz",
         "min": -17.15055452,
@@ -139,5 +139,14 @@
         "db_table": "t1d_onengut19_afr",
         "min": 0,
         "max": 14.972
+    },
+    "cdgrs-sharp25": {
+        "method": "hla_int",
+        "db_table": "cdgrs_additive25",
+        "db_dq": "cdgrs_dq25",
+        "db_int": "cdgrs_hlainteraction",
+        "db_rank": "hla_ranking_klitz",
+        "min": -5.442,
+        "max": 13.120000000000001
     }
 }

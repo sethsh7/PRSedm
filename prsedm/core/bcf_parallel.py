@@ -45,6 +45,11 @@ def process_batch(batch, bcf_files, samples, col, impute, refbcf):
                         impute_score_ref(
                             samples, variant, refbcf))
                     imputed += 1
+                else:
+                    logging.info(
+                    f"Variant not found and impute=off {variant['contig_id']}:"
+                    f"{variant['position']}."
+                    )
     except Exception as e:
         logging.error(f"Error processing contig {contig}: {e}")
 
