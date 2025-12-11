@@ -1,6 +1,7 @@
 # PRSedm
 [![PyPI Version](https://img.shields.io/pypi/v/prsedm.svg)](https://pypi.org/project/prsedm/)
 [![Conda Version](https://img.shields.io/conda/v/sethsh7/prsedm.svg)](https://anaconda.org/sethsh7/prsedm)
+[![Paper DOI](https://img.shields.io/badge/DOI-10.2337%2Fdc25--0142-orange)](https://doi.org/10.2337/dc25-0142)
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.17903985.svg)](https://doi.org/10.5281/zenodo.17903985)
 
 ![Graphical Abstract](https://github.com/sethsh7/PRSedm/raw/main/misc/graphical_abstract_v2.png)
