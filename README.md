@@ -33,6 +33,9 @@ Build from source: ```python -m build```
 
 ## Usage
 
+### PRS Database (variants.db).
+Beginning with v1.1.0, the PRS-EDM variant database is no longer packaged due to size limits and is instead hosted on Zenodo: https://zenodo.org/records/17903390 (direct download: https://zenodo.org/records/17903390/files/variants.db?download=1). The CLI now supports --getsql, which prints the path to the database and downloads it automatically if missing. PRSedm will first check the environment variable PRSEDM_SQL_PATH, then any cached copy, and finally download from Zenodo if needed.
+
 ### Command Line Interface
 
 To call PRSedm from the command line:
