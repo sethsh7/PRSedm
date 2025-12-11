@@ -103,11 +103,14 @@ PRS schematics are stored in a SQLlite database (variants.db) and accessed via a
 
 | Flag                     | Method                 | Variants    | Description                                                                                        | PMID                                                  |
 | ------------------------ | ---------------------- | ----------- | -------------------------------------------------------------------------------------------------- | ----------------------------------------------------- |
+| t2d-suzuki24_prscsx-ma> | Additive + Partitioned | ~1 M | Full genome wide multi-ancestry PRS for Suzuki (PRS-Csx meta)                            | [38374256](https://pubmed.ncbi.nlm.nih.gov/38374256/) |
+| t2d-suzuki24_prscsx-\<ancestry\> | Additive + Partitioned | >500k | Full genome wide ancestry-specific PRS for Suzuki (PRS-Cs) \/eur/afr/eas/sas/safr/his\>                           | [38374256](https://pubmed.ncbi.nlm.nih.gov/38374256/) |
 | t2dp-suzuki24-ma         | Additive + Partitioned | 1289        | Multiancestry weighted Suzuki T2D index variant PRS, and pPS from hard-clustering analyses.        | [38374256](https://pubmed.ncbi.nlm.nih.gov/38374256/) |
 | t2dp-suzuki24-\<ancestry\> | Additive + Partitioned | 1128 - 1285 | As above but weighted for specific ancestries \<eur/afr/safr/eas/sas/his\>                           | [38374256](https://pubmed.ncbi.nlm.nih.gov/38374256/) |
 | t2dp-smith24-ma          | Additive + Partitioned | 353         | Multiancestry cluster-weighted Smith T2D index variant PRS, and pPS from soft-clustering analyses. | [38443691](https://pubmed.ncbi.nlm.nih.gov/38443691/) |
 | t2dp-smith24-\<ancestry\>  | Additive + Partitioned | 25 - 490    |  As above but from ancestry-specific soft clustering \<eur/afr/eas/amr\>.                            | [38443691](https://pubmed.ncbi.nlm.nih.gov/38443691/) |
 | t2d-mahajan22-ma         | Additive               | 338         | Older PRS from Mahajan et al composed of multiancestry index variants.                             | [35551307](https://pubmed.ncbi.nlm.nih.gov/35551307/) |
+| t2d-mahajan-prscsx-eur> | Additive + Partitioned | >500k | Genome wide European ancestry PRS for Mahajan (PRS-Cs)                           | [38374256](https://pubmed.ncbi.nlm.nih.gov/38374256/) |
 | t2dp-udler18             | Additive + Partitioned | 67          | T2D pPS from first soft-clustering analysis.                                                       | [30240442](https://pubmed.ncbi.nlm.nih.gov/30240442/) |
 
 ### Other
