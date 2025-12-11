@@ -6,6 +6,9 @@ __pycache__/
 private/
 scratch/
 
+#The large SQL database
+*.db
+
 # Distribution / packaging
 .Python
 env/
