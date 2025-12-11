@@ -29,7 +29,7 @@ setup(
         "pysam>=0.22",
     ],
     package_data={
-        "prsedm.extensions": ["JSON/*.json", "SQL/*.db"],
+        "prsedm.extensions": ["JSON/*.json"],
     },
     include_package_data=True,
     python_requires=">=3.9",
