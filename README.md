@@ -1,4 +1,7 @@
 # PRSedm
+[![PyPI Version](https://img.shields.io/pypi/v/prsedm.svg)](https://pypi.org/project/prsedm/)
+[![Conda Version](https://img.shields.io/conda/v/sethsh7/prsedm.svg)](https://anaconda.org/sethsh7/prsedm)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.17903985.svg)](https://doi.org/10.5281/zenodo.17903985)
 
 ![Graphical Abstract](https://github.com/sethsh7/PRSedm/raw/main/misc/graphical_abstract_v2.png)
 
@@ -136,6 +139,9 @@ PRSedm hardcodes static normalization of minimum and maximum potential risk cont
 ## Development
 
 Developed and maintained by Seth A. Sharp ([ssharp@stanford.edu](mailto:ssharp@stanford.edu)) at the [Translational Genomics of Diabetes](https://med.stanford.edu/genomics-of-diabetes.html), Stanford University, with collaboration from colleagues at the [University of Exeter](https://www.diabetesgenes.org) and [MGH/Broad Institute](https://www.udlerlab.org). Lu Zhang and Han Sun contributed to v1.1.0 onwards.
+
+## Citation
+If you use **PRSedm** in your research, please cite both the software release ([10.5281/zenodo.17903985](https://doi.org/10.5281/zenodo.17903985)) and the accompanying article ([10.2337/dc25-0142](https://doi.org/10.2337/dc25-0142)).
 
 ## License
 
