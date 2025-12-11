@@ -54,18 +54,18 @@ def get_samples(var_obj):
 
 
 def check_bed_type(bed):
-    """Parse a BED file or DataFrame and return it as a DataFrame."""
-    if isinstance(bed, pd.DataFrame):
-        return bed
-    if not os.path.isfile(bed):
-        raise FileNotFoundError(f"'{bed}' not found.")
-    try:
-        df = pd.read_whitespace(bed)
-        if df.shape[1] < 3:
-            raise InvalidBedFormatError(f"Invalid BED format in '{bed}'.")
-        return df
-    except Exception as e:
-        raise ValueError(f"Error reading '{bed}': {e}")
+	if isinstance(bed, pd.DataFrame):
+		return bed
+	if not os.path.isfile(bed):
+		raise FileNotFoundError(f"'{bed}' not found.")
+
+	try:
+		df = pd.read_whitespace(bed)
+		if df.shape[1] < 3:
+			raise InvalidBedFormatError(f"Invalid BED format in '{bed}'.")
+		return df
+	except Exception as e:
+		raise ValueError(f"Error reading '{bed}': {e}")
 
 
 def read_bcf_mapping(file_path):
@@ -153,11 +153,11 @@ def load_meta_data(path):
 
 
 def fetch_db(db_path, table):
-    """Fetch data from the SQLite database."""
-    import sqlite3
-    return pd.read_sql_query(
-        f"SELECT * FROM {table}", sqlite3.connect(db_path))
-
+	"""Fetch data from the SQLite database."""
+	import sqlite3
+	df = pd.read_sql_query(f"SELECT * FROM {table}", sqlite3.connect(db_path))
+	print(f"Loaded {len(df)} SNP rows from table '{table}' in {db_path}")
+	return df
 
 def get_snp_db(score_name):
     """Return filtered SNP data from the database."""
@@ -169,9 +169,7 @@ def get_snp_db(score_name):
             "db_table",
             "db_dq") if meta[score_name].get(t)]
     df = pd.concat([fetch_db(db_path, t) for t in tables], ignore_index=True)
-    cols = [c for c in df.columns if c.startswith(
-        "position")] + ['rsid', 'contig_id', 'effect_allele']
-    return df[cols]
+    return df
 
 
 class InvalidBedFormatError(Exception):

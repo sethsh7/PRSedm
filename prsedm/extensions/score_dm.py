@@ -20,42 +20,73 @@ from ..core.utilities import (
 configure_logging()
 
 
-def process_flag(flag, meta, db_path, config, norm=False):
+def process_flag(flag, meta, db_path, config, norm=False, full=False):
     """Process a flag and add its total optionally normalized score as a new column."""
     logging.info(f"Processing flag: {flag}")
     score = fetch_db(db_path, meta[flag]['db_table'])
     method = meta[flag].get('method', 'additive')
+    if "stream" in meta[flag]:
+        full = not meta[flag]["stream"]
 
     if method == 'grouped':
         logging.info(f"Generating grouped scores for {flag}")
-        result = score_grouped(bed=score, config=config)
+        result, group_total_cols = score_grouped(bed=score, config=config, full=full)
+        result[f"{flag}_total"] = result[group_total_cols].sum(axis=1)
+
+        if not full:
+            # compact mode: just group totals + total
+            result = result[group_total_cols + [f"{flag}_total"]]
+
     elif method == 'hla_int':
         logging.info(f"Generating HLA interaction scores for {flag}")
         dq, int_df, rank = (
-            fetch_db(
-                db_path, meta[flag][k]) for k in (
-                'db_dq', 'db_int', 'db_rank'))
+            fetch_db(db_path, meta[flag][k]) for k in ('db_dq', 'db_int', 'db_rank')
+        )
         dq = normalize_bed_contigs(dq, config.bcf)
-        result = score_int_hla(score, dq, int_df, rank, config)
+        result = score_int_hla(score, dq, int_df, rank, config, full=full, flag=flag)
+
     else:
         logging.info(f"Generating additive scores for {flag}")
-        result = score_bcf(**asdict(config), bed=score)
 
-    # Add the 'flag_total' column
-    result = pd.concat([result, result.select_dtypes(
-        'number').sum(axis=1).rename(f"{flag}_total")], axis=1)
+        # *** KEY CHANGE ***
+        # full=False  → stream=True  (PRS sum only, memory efficient)
+        # full=True   → stream=False (variant matrix + sum)
+        stream = not full
 
-    # Add normalized column if norm is True
+        result = score_bcf(
+            bed=score,
+            stream=stream,
+            **asdict(config)
+        )
+
+        if stream:
+            # PRS-only output; score_bcf returns a column named 'sum'
+            result.rename(columns={"sum": f"{flag}_total"}, inplace=True)
+
+        else:
+            # score_bcf returned variant columns + 'sum'
+            rename_map = {}
+            for col in result.columns:
+                if col == "sum":
+                    rename_map[col] = f"{flag}_total"
+                else:
+                    rename_map[col] = f"{flag}_{col}"
+            result.rename(columns=rename_map, inplace=True)
+
+            if not full:
+                # Should not happen normally since stream = not full
+                result = result[[f"{flag}_total"]]
+
+    # Normalization block (unchanged)
     if norm:
         flag_total_col = f"{flag}_total"
         norm_col = f"{flag}_norm"
         min_value = meta.get(flag, {}).get('min', result[flag_total_col].min())
         max_value = meta.get(flag, {}).get('max', result[flag_total_col].max())
-
-        result[norm_col] = (result[flag_total_col] -
-                            min_value) / (max_value - min_value)
+        result[norm_col] = (result[flag_total_col] - min_value) / (max_value - min_value)
         logging.info(
-            f"Added normalized column '{norm_col}' using min={min_value} and max={max_value}.")
+            f"Added normalized column '{norm_col}' using min={min_value} and max={max_value}."
+        )
 
     logging.info(f"Processed flag '{flag}' with total column '{flag}_total'.")
 
@@ -63,7 +94,8 @@ def process_flag(flag, meta, db_path, config, norm=False):
 
 
 def gen_dm(vcf, col, scores, build="hg38", impute=False, refbcf=None,
-           norm=False, parallel=False, ntasks=os.cpu_count(), batch_size=1):
+           norm=False, parallel=False, ntasks=os.cpu_count(), batch_size=1,
+           full=False):
     """Generate DM-related PRS scores using a configuration object."""
     if impute and not refbcf:
         raise ValueError(
@@ -95,7 +127,7 @@ def gen_dm(vcf, col, scores, build="hg38", impute=False, refbcf=None,
         if flag not in meta:
             logging.warning(f"Flag '{flag}' not found in metadata. Skipping.")
             continue
-        outputs.append(process_flag(flag, meta, db_path, config, norm))
+        outputs.append(process_flag(flag, meta, db_path, config, norm, full))
 
     # Concatenate the results or return an empty DataFrame
     result = pd.concat(outputs, axis=1) if outputs else pd.DataFrame()
@@ -159,6 +191,10 @@ def main():
         "--output",
         default="results.csv",
         help="Path to save the output file (default: 'results.csv').")
+    parser.add_argument(
+        "--full",
+        action="store_true",
+        help="Include individual variant scores with PRS name prepended.")
 
     args = parser.parse_args()
     logging.info("Parsed command line arguments.")
@@ -178,7 +214,8 @@ def main():
             norm=args.norm,
             parallel=args.parallel,
             ntasks=args.ntasks,
-            batch_size=args.batch_size
+            batch_size=args.batch_size,
+            full=args.full
         )
         logging.info("Generated PRS scores successfully.")
 

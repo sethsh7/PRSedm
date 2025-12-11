@@ -8,61 +8,96 @@ from .variant_processing import fetch_variant, geno_to_df
 
 
 def process_batch(batch, bcf_files, samples, col, impute, refbcf):
-    """Process a batch of variants and return results."""
-    batch_results, genotyped, imputed = [], 0, 0
+	"""Process a batch of variants and return results.
 
-    contig = batch.iloc[0]['contig_id']
-    bcf_file = (
-        bcf_files.get(contig) or
-        bcf_files.get(f"chr{contig}") or
-        bcf_files.get(contig.lstrip('chr')) or
-        bcf_files.get('all')
-    )
+	Returns
+	-------
+	batch_results : list[pd.DataFrame]
+		One (IID x 1) score column per variant.
+	genotyped : int
+		Number of genotyped variants in this batch.
+	imputed : int
+		Number of imputed variants in this batch.
+	"""
+	batch_results, genotyped, imputed = [], 0, 0
 
-    if not bcf_file or not os.path.isfile(bcf_file):
-        logging.warning(
-            f"Skipping batch: BCF file not found for contig {contig}")
-        return [], 0, 0  # Skip this batch
+	contig = batch.iloc[0]['contig_id']
+	bcf_file = (
+		bcf_files.get(contig) or
+		bcf_files.get(f"chr{contig}") or
+		bcf_files.get(contig.lstrip('chr')) or
+		bcf_files.get('all')
+	)
 
-    try:
-        with pysam.VariantFile(bcf_file, 'r') as var_obj:
-            for _, variant in batch.iterrows():
-                logging.info(
-                    f"Processing variant {variant['contig_id']}:"
-                    f"{variant['position']}..."
-                )
-                geno_vcf = fetch_variant(var_obj, variant, samples)
-                if geno_vcf:
-                    geno_df = geno_to_df(geno_vcf, samples)
-                    batch_results.append(score_geno(geno_df, variant, col))
-                    genotyped += 1
-                elif impute and refbcf:
-                    logging.info(
-                        f"Imputing {variant['contig_id']}:"
-                        f"{variant['position']}..."
-                    )
-                    batch_results.append(
-                        impute_score_ref(
-                            samples, variant, refbcf))
-                    imputed += 1
-                else:
-                    logging.info(
-                    f"Variant not found and impute=off {variant['contig_id']}:"
-                    f"{variant['position']}."
-                    )
-    except Exception as e:
-        logging.error(f"Error processing contig {contig}: {e}")
+	if not bcf_file or not os.path.isfile(bcf_file):
+		logging.warning(
+			f"Skipping batch: BCF file not found for contig {contig}"
+		)
+		return [], 0, 0  # Skip this batch
 
-    return batch_results, genotyped, imputed
+	try:
+		with pysam.VariantFile(bcf_file, 'r') as var_obj:
+			for _, variant in batch.iterrows():
+				logging.info(
+					f"Processing variant {variant['contig_id']}:"
+					f"{variant['position']}..."
+				)
+				geno_vcf = fetch_variant(var_obj, variant, samples)
+				if geno_vcf:
+					geno_df = geno_to_df(geno_vcf, samples)
+					batch_results.append(score_geno(geno_df, variant, col))
+					genotyped += 1
+				elif impute and refbcf:
+					logging.info(
+						f"Imputing {variant['contig_id']}:"
+						f"{variant['position']}..."
+					)
+					batch_results.append(
+						impute_score_ref(samples, variant, refbcf)
+					)
+					imputed += 1
+				else:
+					logging.info(
+						f"Variant not found and impute=off "
+						f"{variant['contig_id']}:{variant['position']}."
+					)
+	except Exception as e:
+		logging.error(f"Error processing contig {contig}: {e}")
+
+	return batch_results, genotyped, imputed
 
 
 def process_batches_parallel(
-        batches, bcf_files, samples, col, impute, refbcf, ntasks):
-    """Run batch processing in parallel."""
-    with parallel_backend('loky', n_jobs=ntasks):
-        results = Parallel()(
-            delayed(process_batch)(
-                batch, bcf_files, samples, col, impute, refbcf)
-            for batch in batches
-        )
-    return results
+		batches, bcf_files, samples, col, impute, refbcf, ntasks, stream=False):
+	"""
+	Run batch processing in parallel.
+
+	Parameters
+	----------
+	stream : bool
+		If False (default):
+			Materialize a full list of (batch_results, genotyped, imputed).
+		If True:
+			Return a generator that yields (batch_results, genotyped, imputed)
+			batch by batch, reducing peak memory.
+	"""
+	if not stream:
+		# Original behavior: materialize full list
+		with parallel_backend('loky', n_jobs=ntasks):
+			results = Parallel()(
+				delayed(process_batch)(
+					batch, bcf_files, samples, col, impute, refbcf
+				)
+				for batch in batches
+			)
+		return results
+
+	# Streaming behavior: joblib yields results via generator
+	with parallel_backend('loky', n_jobs=ntasks):
+		results = Parallel(return_as="generator")(
+			delayed(process_batch)(
+				batch, bcf_files, samples, col, impute, refbcf
+			)
+			for batch in batches
+		)
+	return results

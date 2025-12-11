@@ -132,7 +132,7 @@ PRSedm hardcodes static normalization of minimum and maximum potential risk cont
 
 ## Development
 
-Developed and maintained by Seth A. Sharp ([ssharp@stanford.edu](mailto:ssharp@stanford.edu)) at the [Translational Genomics of Diabetes](https://med.stanford.edu/genomics-of-diabetes.html), Stanford University, with collaboration from colleagues at the [University of Exeter](https://www.diabetesgenes.org) and [MGH/Broad Institute](https://www.udlerlab.org)
+Developed and maintained by Seth A. Sharp ([ssharp@stanford.edu](mailto:ssharp@stanford.edu)) at the [Translational Genomics of Diabetes](https://med.stanford.edu/genomics-of-diabetes.html), Stanford University, with collaboration from colleagues at the [University of Exeter](https://www.diabetesgenes.org) and [MGH/Broad Institute](https://www.udlerlab.org). Lu Zhang and Han Sun contributed to v1.1.0 onwards.
 
 ## License
 

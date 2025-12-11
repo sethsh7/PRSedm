@@ -7,7 +7,7 @@ long_description = (this_directory / "README.md").read_text()
 
 setup(
     name="prsedm",
-    version="1.0.3",
+    version="1.1.0",
     description=(
         "PRSedm (Polygenic Risk Score Extension for Diabetes Mellitus) "
         "is a package for local and remote generation of "

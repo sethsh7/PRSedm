@@ -148,5 +148,54 @@
         "db_rank": "hla_ranking_klitz",
         "min": -5.442,
         "max": 13.120000000000001
+    },
+    "t2d-suzuki24_prscsx-ma": {
+        "method": "additive",
+        "db_table": "t2d_suzuki24_prscsx_ma",
+        "min": -22.566879758600784,
+        "max": 24.682910688473445,
+        "stream": true
+    },
+    "t2d-suzuki24_prscsx-eur": {
+        "method": "additive",
+        "db_table": "t2d_suzuki24_prscsx_eur",
+        "min": -23.56578790310605,
+        "max": 26.35511072416559,
+        "stream": true
+    },
+    "t2d-suzuki24_prscsx-afr": {
+        "method": "additive",
+        "db_table": "t2d_suzuki24_prscsx_afr",
+        "min": -47.920200948454784,
+        "max": 48.258424641645405,
+        "stream": true
+    },
+    "t2d-suzuki24_prscsx-his": {
+        "method": "additive",
+        "db_table": "t2d_suzuki24_prscsx_his",
+        "min": -54.69372486416395,
+        "max": 59.90506812135817,
+        "stream": true
+    },
+    "t2d-suzuki24_prscsx-eas": {
+        "method": "additive",
+        "db_table": "t2d_suzuki24_prscsx_eas",
+        "min": -29.581587992984815,
+        "max": 34.93797956856278,
+        "stream": true
+    },
+    "t2d-suzuki24_prscsx-sas": {
+        "method": "additive",
+        "db_table": "t2d_suzuki24_prscsx_sas",
+        "min": -62.74300067830038,
+        "max": 69.48592189646395,
+        "stream": true
+    },
+    "t2d-mahajan22-prscsx-eur": {
+        "method": "additive",
+        "db_table": "t2d_mahajan22_prscsx_eur",
+        "min": -75.97069093812061,
+        "max": 76.95972692635226,
+        "stream": true
     }
 }

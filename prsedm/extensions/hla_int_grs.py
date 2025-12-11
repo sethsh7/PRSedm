@@ -12,7 +12,8 @@ def generate_dosage_table(dq, config):
         raise ValueError(
             f"Position column '{position}' not found in the dosage table.")
     dq['beta'] = 1
-    dosages = score_bcf(bed=dq, **config.__dict__)
+    dosages = score_bcf(bed=dq, stream=False, **config.__dict__)
+    dosages = dosages.drop(columns=["sum"], errors="ignore")
     dq['contig_id'] = dq['contig_id'].apply(lambda x: x.lstrip('chr'))
     dosages.columns = [col.lstrip('chr') if isinstance(
         col, str) else col for col in dosages.columns]
@@ -69,10 +70,19 @@ def calculate_hla_scores(cat, int_df):
     return cat.drop(columns=['a1', 'a2'])
 
 
-def score_int_hla(score, dq, int_df, rank, config):
-    """Generate and combine HLA and grouped scores."""
-    dosages = generate_dosage_table(dq, config)
-    cat = convert_to_categorical(dosages, rank)
-    hla_score = calculate_hla_scores(cat, int_df)
-    grouped_score = score_grouped(score, config)
-    return pd.concat([hla_score, grouped_score], axis=1)
+def score_int_hla(score, dq, int_df, rank, config, full=False, flag=None):
+	"""Generate and combine HLA and grouped scores."""
+	dosages = generate_dosage_table(dq, config)
+	cat = convert_to_categorical(dosages, rank)
+	hla_score = calculate_hla_scores(cat, int_df)
+	grouped_score, group_total_cols = score_grouped(score, config, full=full)
+
+	# Concatenate all outputs
+	result = pd.concat([hla_score, grouped_score], axis=1)
+
+	if flag:
+		# Use only the numeric columns from hla_score + the known group total columns
+		hla_numeric = hla_score.select_dtypes("number").columns.tolist()
+		result[f"{flag}_total"] = result[hla_numeric + group_total_cols].sum(axis=1)
+
+	return result
