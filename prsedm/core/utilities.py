@@ -1,7 +1,7 @@
 """Contains utility functions for the SRC package."""
+
 import os
 import logging
-from importlib.resources import files
 from dataclasses import dataclass, field
 import pandas as pd
 import pysam
@@ -10,21 +10,21 @@ import pysam
 @dataclass
 class PRSConfig:
     """Common configuration class for PRS scoring."""
-    bcf: str  # Mandatory, fixed bcf path
-    col: str = field(default="GT")  # Optional, default to "GT"
-    build: str = "hg38"  # Optional, default to "hg38"
-    impute: bool = False  # Optional, default to False
-    refbcf: str = None  # Optional, can be None
-    parallel: bool = False  # Optional, default to False
-    ntasks: int = os.cpu_count()  # Optional, defaults to CPU count
-    batch_size: int = 1  # Optional, default to 1
+
+    bcf: str
+    col: str = field(default="GT")
+    build: str = "hg38"
+    impute: bool = False
+    refbcf: str = None
+    parallel: bool = False
+    ntasks: int = 1
+    batch_size: int = 1
 
     def __post_init__(self):
         """Validate the 'col' parameter."""
         if self.col not in {"GT", "GP"}:
             raise ValueError(
-                f"Invalid value for 'col': {self.col}. "
-                " Must be 'GT' or 'GP'."
+                f"Invalid value for 'col': {self.col}.  Must be 'GT' or 'GP'."
             )
 
 
@@ -39,12 +39,14 @@ def configure_logging():
         file_handler = logging.FileHandler(log_path)
         handlers.insert(0, file_handler)
     except (OSError, IOError) as e:
-        print(f"Warning: Could not write to log file '{log_path}'. Using console logging only. ({e})")
+        print(
+            f"Warning: Could not write to log file '{log_path}'. Using console logging only. ({e})"
+        )
 
     logging.basicConfig(
         level=logging.INFO,
-        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-        handlers=handlers
+        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+        handlers=handlers,
     )
 
 
@@ -54,139 +56,94 @@ def get_samples(var_obj):
 
 
 def check_bed_type(bed):
-	if isinstance(bed, pd.DataFrame):
-		return bed
-	if not os.path.isfile(bed):
-		raise FileNotFoundError(f"'{bed}' not found.")
+    if isinstance(bed, pd.DataFrame):
+        return bed
+    if not os.path.isfile(bed):
+        raise FileNotFoundError(f"'{bed}' not found.")
 
-	try:
-		df = pd.read_whitespace(bed)
-		if df.shape[1] < 3:
-			raise InvalidBedFormatError(f"Invalid BED format in '{bed}'.")
-		return df
-	except Exception as e:
-		raise ValueError(f"Error reading '{bed}': {e}")
-
-
-def read_bcf_mapping(file_path):
-    """Read contig-to-bcf mapping from a text file."""
-    bcf_files = {}
-    with open(file_path, 'r') as f:
-        for line in f:
-            contig, filename = line.strip().split()
-            bcf_files[contig] = filename
-    return bcf_files
+    df = pd.read_csv(bed, sep=r"\s+", engine="python")
+    if df.shape[1] < 3:
+        raise InvalidBedFormatError(f"Invalid BED format in '{bed}'.")
+    return df
 
 
 def determine_bcf_type(bcf):
-    """Determine if the bcf input is a mapping text file or a single bcf file."""
-    try:
-        with open(bcf, 'r') as f:
-            f.read(1024)  # Test if it's a text file
-        logging.info(f"Reading bcf mapping from {bcf}")
+    """Determine if input is a mapping file or a single BCF/VCF."""
+    bcf = os.path.abspath(bcf)
+
+    if os.path.splitext(bcf)[1].lower() == ".txt":
         mapping_dir = os.path.dirname(bcf)
-        df = read_whitespace(bcf)
-        return {contig: os.path.join(mapping_dir, path)
-                for contig, path in df.values}
-    except (UnicodeDecodeError, OSError):
-        logging.info(f"Processing a single bcf or binary file: {bcf}")
-        return {"all": bcf}
+        df = pd.read_csv(bcf, sep=r"\s+", header=None, engine="python")
+        if df.shape[1] < 2:
+            raise ValueError(f"Invalid mapping file: {bcf}")
 
+        out = {}
+        for contig, path in df.iloc[:, :2].values:
+            path = os.path.expanduser(path)
+            if not os.path.isabs(path):
+                path = os.path.join(mapping_dir, path)
+            path = os.path.abspath(path)
+            if not os.path.exists(path):
+                raise FileNotFoundError(f"{path} not found (from mapping file: {bcf})")
+            out[contig] = path
+        return out
 
-def check_index_bcf(bcf_path):
-    """Ensure the bcf/vcf file is indexed."""
-    index_path = f"{bcf_path}.tbi" if bcf_path.endswith(
-        ".bcf.gz") else f"{bcf_path}.csi"
-    if not os.path.isfile(index_path):
-        logging.info(f"Indexing {bcf_path}...")
-        try:
-            preset = "bcf" if bcf_path.endswith(".bcf.gz") else None
-            pysam.tabix_index(
-                bcf_path,
-                preset=preset,
-                force=True,
-                csi=bcf_path.endswith(".bcf"))
-        except Exception as e:
-            raise RuntimeError(f"Failed to index {bcf_path}: {e}")
+    logging.info(f"Processing single BCF/VCF file: {bcf}")
+    return {"all": bcf}
 
 
 def normalize_bed_contigs(snplist, bcf_file):
     """Modify BED contigs to match the prefix style of bcf contigs."""
-    # Handle unloaded txt list, loaded map, or single file
-    if isinstance(bcf_file, str) and bcf_file.endswith('.txt'):
-        with open(bcf_file, 'r') as f:
-            bcf_file = f.readline().strip()  # Use the first bcf file listed in the text file
-    # Handle a dictionary of bcf files by selecting the first one
+    if isinstance(bcf_file, str) and bcf_file.endswith(".txt"):
+        mapping_dir = os.path.dirname(bcf_file)
+        df = pd.read_csv(bcf_file, sep=r"\s+", header=None, engine="python")
+        if df.shape[1] < 2:
+            raise ValueError(f"Invalid mapping file: {bcf_file}")
+        first_path = str(df.iloc[0, 1])
+        if not os.path.isabs(first_path):
+            first_path = os.path.join(mapping_dir, first_path)
+        bcf_file = first_path
+
     elif isinstance(bcf_file, dict):
         bcf_file = next(iter(bcf_file.values()))
 
-    with pysam.VariantFile(bcf_file, 'r') as bcf:
+    with pysam.VariantFile(bcf_file, "r") as bcf:
         bcf_contigs = set(bcf.header.contigs)
-    bcf_has_chr_prefix = any(contig.startswith('chr')
-                             for contig in bcf_contigs)
+
+    bcf_has_chr_prefix = any(contig.startswith("chr") for contig in bcf_contigs)
+
     if bcf_has_chr_prefix:
-        snplist['contig_id'] = snplist['contig_id'].apply(
-            lambda x: f"chr{x}" if not str(x).startswith('chr') else x
+        snplist["contig_id"] = snplist["contig_id"].apply(
+            lambda x: f"chr{x}" if not str(x).startswith("chr") else x
         )
     else:
-        snplist['contig_id'] = snplist['contig_id'].apply(
-            lambda x: x.lstrip('chr'))
+        snplist["contig_id"] = snplist["contig_id"].apply(
+            lambda x: str(x).lstrip("chr")
+        )
+
     return snplist
-
-
-def read_whitespace(file):
-    """Read a whitespace-separated file into a DataFrame."""
-    return pd.read_csv(file, header=None, delim_whitespace=True, engine='python')
-
-
-def save_csv_plain(df, file):
-    """Save a DataFrame to a tab-separated file without headers or indices."""
-    df.to_csv(file, header=False, index=False, sep="\t")
 
 
 def load_meta_data(path):
     """Load the JSON configuration file."""
     import json
+
     logging.info(f"Loading metadata from {path}")
-    with open(path, 'r') as f:
+    with open(path, "r") as f:
         return json.load(f)
 
 
 def fetch_db(db_path, table):
-	"""Fetch data from the SQLite database."""
-	import sqlite3
-	df = pd.read_sql_query(f"SELECT * FROM {table}", sqlite3.connect(db_path))
-	print(f"Loaded {len(df)} SNP rows from table '{table}' in {db_path}")
-	return df
+    """Fetch data from the SQLite database."""
+    import sqlite3
 
-def get_snp_db(score_name):
-    """Return filtered SNP data from the database."""
-    ext_path = files(__name__.split('.')[0]) / 'extensions'
-    meta = load_meta_data(ext_path / 'JSON' / 'prs_meta.json')
-    db_path = ext_path / 'SQL' / 'variants.db'
-    tables = [
-        meta[score_name].get(t) for t in (
-            "db_table",
-            "db_dq") if meta[score_name].get(t)]
-    df = pd.concat([fetch_db(db_path, t) for t in tables], ignore_index=True)
+    with sqlite3.connect(db_path) as conn:
+        df = pd.read_sql_query(f"SELECT * FROM {table}", conn)
+    logging.info(f"Loaded {len(df)} SNP rows from table '{table}' in {db_path}")
     return df
 
 
 class InvalidBedFormatError(Exception):
     """Exception raised for invalid BED file format."""
-    pass
 
-
-class VariantNotFoundError(Exception):
-    """Exception raised when a variant cannot be found in the bcf or bcf."""
-    pass
-
-
-class FileReadError(Exception):
-    """Exception raised for errors in reading files."""
-    pass
-
-
-class InvalidbcfFormatError(Exception):
-    """Exception raised for invalid bcf file format."""
     pass

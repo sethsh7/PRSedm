@@ -8,11 +8,30 @@
 
 ## Overview
 
-**PRSedm (Polygenic Risk Score Extension for Diabetes Mellitus)** is a flexible and extendable open-source package for efficient local and remote (All of Us, UK Biobank, etc.) generation of published Polygenic Risk Scores (PRS) for Diabetes Mellitus (DM) and related cardiometabolic phenotypes.  
+**PRSedm (Polygenic Risk Score Extension for Diabetes Mellitus)** is a flexible and extendable open-source package for efficient local and remote (All of Us, UK Biobank, etc.) generation of published Polygenic Risk Scores (PRS) for Diabetes Mellitus (DM) and related cardiometabolic phenotypes. 
 
-PRS for Type 1 diabetes (T1D) and Type 2 diabetes (T2D), and more recent partitioned Polygenic Scores (pPS), have numerous applications as research and clinical tools.  
+PRSedm introduces a new parallelized "one-liner" method to generate standardized PRS and pPS for DM robust to variables such as genotyping method, quality control, and imputation panel.  
 
-PRSedm aims to introduce a new parallelized "one-liner" method to generate standardized PRS and pPS for DM robust to variables such as genotyping method, quality control, and imputation panel.  
+## Updates (v1.3.0)
+- Improved multiallelic SNP handling and fixed related bugs
+- Significant performance improvements from optimized SNP batching and parallelism
+- Simplified command-line interface and argument structure
+- Fixed bugs and syntax issues in the SNP database backend
+- PRS metadata is now fetched automatically alongside the SNP database
+- Per-PRS variant log files are now generated, capturing metrics such as INFO/R², missing variants, and allele frequency
+- Renamed "imputation" feature to "estimate" to distinguish from genotype imputation
+- Added support for custom proxy variant substitution via `--proxy`
+
+## New proxy feature
+
+PRSedm supports optional variant substitution via a user-supplied proxy file (`--proxy`).
+Required format (whitespace-delimited):
+
+<pre style="overflow-x: auto; white-space: pre;">
+target_rsid target_contig_id target_position target_effect_allele sub_rsid sub_contig_id sub_position sub_effect_allele
+rs12345     chr1             1234567         A                     rs54321  chr1           1234999      A
+rs23456     chr2             7654321         G                     rs65432  chr2           7654000      G
+</pre>
 
 ## Installation
 
@@ -20,107 +39,94 @@ PRSedm aims to introduce a new parallelized "one-liner" method to generate stand
 
 PRSedm requires the following packages:
 
-- Python (>=3.9)
-- Joblib (>=1.3.2)
-- Pandas (>=2.2.3)
-- Pysam (>=0.22.0)
-- Numpy\* (2.x/1.x)
+- Python (>=3.9), Joblib (>=1.3.2), Pandas (>=2.2.3), Pysam (>=0.22.0), Numpy\* (2.x/1.x)
 
 \*Build with 1.x when deploying to RAP platforms with 1.x dependencies.
 
 ### User Installation
-
-PRSedm is available through a number of channels: \
-PIP: ```pip install prsedm``` \
-Anaconda: ```conda install sethsh7::prsedm``` \
-Build from source: ```python -m build```
+PIP: `pip install prsedm`  
+Anaconda: `conda install sethsh7::prsedm`  
+Build from source: `python -m build`
 
 ## Usage
+PRSEDM can be called from the command line:
 
-### PRS Database (variants.db).
-Beginning with v1.1.0, the PRS-EDM variant database is no longer packaged due to size limits and is instead hosted on Zenodo: https://zenodo.org/records/17903390 (direct download: https://zenodo.org/records/17903390/files/variants.db?download=1). The CLI now supports --getsql, which prints the path to the database and downloads it automatically if missing. PRSedm will first check the environment variable PRSEDM_SQL_PATH, then any cached copy, and finally download from Zenodo if needed.
+```prsedm --vcf <path_to_vcf_file> [options]```
 
-### Command Line Interface
-
-To call PRSedm from the command line:
-
-```bash
-prsedm --vcf <path_to_vcf_file> [options]
+PRSEDM can be also be called from Python:
+```python
+import prsedm
+df = prsedm.gen_dm(
+    vcf=vcf,
+    ... 
+)
 ```
-
-- `--vcf` *(required)*: Path to an indexed VCF or BCF file, or a text file mapping one VCF per contig.
+### Options
+- `--vcf` *(required)*: Path to an indexed VCF or BCF file, or a text file mapping one VCF/BCF per contig.
 - `--col`: Genotype column to score (default: `GT`, options: `GT` for WGS, `GP` for imputed data).
 - `--build`: Genome build to use (default: `hg38`, options: `hg19`, `hg38`).
-- `--scores` *(required)*: Comma-separated list of PRS to generate, e.g., `PRS1,PRS2`.
-- `--impute` *(optional)*: Enable imputation (requires `--refvcf`) (default: off).
-- `--refvcf` *(optional)*: Path to indexed reference VCF/BCF, or text file mapping one VCF/BCF per contig (required if --impute is set).
-- `--norm` *(optional)*: Perform fixed MinMax normalization (default: off).
-- `--parallel` *(optional)*: Enable parallel processing (default: off).
-- `--ntasks` *(optional)*: Number of tasks to use for parallel processing (default: CPU count).
-- `--batch-size` *(optional)*: Number of variants per batch (default: `1`).
+- `--scores` *(required)*: Comma-separated list of PRS to generate, e.g., `t1dgrs2-luckett25,t2dp-udler18`.
+- `--estimate` *(optional)*: Path to indexed reference VCF/BCF, or text file mapping one VCF/BCF per contig. Used to estimate missing variants and enable normalization when variants are absent.
+- `--ntasks` *(optional)*: Number of tasks to use (default: `1`).
+- `--batch-size` *(optional)*: Number of variants per batch (default: `5000`).
 - `--output`: Path to save the output file (default: `results.csv`).
+- `--full`: Include individual variant scores with PRS name prepended.
+- `--getsql`: Download or locate the PRS SQL database (`variants.db`) and metadata JSON (`prs_meta.json`) and exit.
 
-### Python (recommended)
-
-To call PRSedm from python:
-
-```python
-import PRSedm
-df = prsedm.gen_dm(vcf, col, build, scores, impute, refvcf, norm, parallel, ntasks, batch_size)
-```
 
 ### Single file per-chromosome loading
-
-For --vcf and --refvcf you can point to a text a single file mapping per contiguous region formatted as such (whitespace delimited):
+For `--vcf` and `--estimate` you can point to a single text file mapping per contiguous region formatted as such (whitespace delimited):
 
 ```text
-file1.chr1.vcf.gz   chr1
-file2.chr2.vcf.gz   chr2
+chr1   file1.chr1.vcf.gz
+chr2   file2.chr2.vcf.gz
 ...
 ```
+
+## PRS Database and metadata
+The database containing PRS designs and metadata is hosted at
+https://zenodo.org/records/17903390 and downloaded automatically.
+PRSedm will first check the environment variables `PRSEDM_SQL_PATH` and `PRSEDM_META_PATH` for custom databases.
 
 ## Research Analysis Platforms (RAP's)
 
 Remote deployment to remote Research Analysis Platforms (RAP's) is possible via notebook wrappers:
 - All of Us (WGS) - [Notebook Here](https://github.com/sethsh7/PRSedm/blob/main/notebooks/PRSedm-AllofUS-notebook.ipynb)
-- UK Biobank (imputed WGS)- [Notebook Here](https://github.com/sethsh7/PRSedm/blob/main/notebooks/PRSedm-DNAnexus-WGS-notebook.ipynb)
-- UK Biobank (imputed array)  - [Notebook Here](https://github.com/sethsh7/PRSedm/blob/main/notebooks/PRSedm-DNAnexus-imputed-notebook.ipynb)
+- UK Biobank (imputed WGS) - [Notebook Here](https://github.com/sethsh7/PRSedm/blob/main/notebooks/PRSedm-DNAnexus-WGS-notebook.ipynb)
+- UK Biobank (imputed array) - [Notebook Here](https://github.com/sethsh7/PRSedm/blob/main/notebooks/PRSedm-DNAnexus-imputed-notebook.ipynb)
 
-## Available PRS
+## List of available PRS
+### Type 1 Diabetes
 
-PRS schematics are stored in a SQLlite database (variants.db) and accessed via a JSON metadata (prs_meta.json). These are automatically read and fully extendable if the user wishes to add additional PRS. The following PRS are available by default:  
+| Flag | Method | Variants | Description | PMID |
+| --- | --- | ---: | --- | --- |
+| `t1dgrs2-luckett25` | HLA Interaction + Partitioned | 67 | "GRS2x" updated PRS with widest compatibility and HLA-based risk pPS. | [40267362](https://pubmed.ncbi.nlm.nih.gov/40267362/) |
+| `t1dgrs2-qu22` | HLA Interaction + Partitioned | 71 | Original "GRS2" PRS with the addition of 4 African ancestry SNPs from Onengut, proposed in Qu et al and utilized in eMERGE. | [34997821](https://pubmed.ncbi.nlm.nih.gov/34997821/) |
+| `t1dgrs2-sharp21` | HLA Interaction + Partitioned | 67 | Version of "GRS2" PRS designed for "TOPMED-R2" from 2021 GitHub. | [35312757](https://pubmed.ncbi.nlm.nih.gov/35312757/) |
+| `t1d-onengut19-afr` | Additive | 6 | African-ancestry PRS proposed by Onengut in 2019, updated for modern compatibility. | [30659077](https://pubmed.ncbi.nlm.nih.gov/30659077/) |
+| `t1dgrs2-sharp19` | HLA Interaction + Partitioned | 67 | Original 1000 Genomes version of "GRS2" PRS as published, with limited modern compatibility. | [30655379](https://pubmed.ncbi.nlm.nih.gov/30655379/) |
 
-## Type 1 Diabetes
+### Type 2 Diabetes
 
-| Flag              | Method                        | Variants | Description                                                                                                                 | PMID                                                   |
-| ----------------- | ----------------------------- | -------- | --------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------ |
-| t1dgrs2-luckett25   | HLA Interaction + Partitioned | 67       | "GRS2x" updated PRS with widest compatibility and HLA-based risk pPS.                                                       | [40267362](https://pubmed.ncbi.nlm.nih.gov/40267362/)                                                    |
-| t1dgrs2-qu22      | HLA Interaction + Partitioned | 71       | Original "GRS2" PRS with the addition of 4 African ancestry SNPs from Onengut, proposed in Qu et al and utilized in eMERGE. | [34997821](https://pubmed.ncbi.nlm.nih.gov/34997821/)  |
-| t1dgrs2-sharp21   | HLA Interaction + Partitioned | 67       | Version of "GRS2" PRS designed for "TOPMED-R2" from 2021 GitHub.                                                            | [35312757](https://pubmed.ncbi.nlm.nih.gov/35312757/)  |
-| t1d-onengut19-afr | Additive                      | 6        | African-ancestry PRS proposed by Onengut in 2019, updated for modern compatibility.                                         | [30659077](https://pubmed.ncbi.nlm.nih.gov/30659077/)  |
-| t1dgrs2-sharp19   | HLA Interaction + Partitioned | 67       | Original 1000 Genomes version of "GRS2" PRS as published, with limited modern compatibility.                                |  [30655379](https://pubmed.ncbi.nlm.nih.gov/30655379/) |
-
-## Type 2 Diabetes
-
-| Flag                     | Method                 | Variants    | Description                                                                                        | PMID                                                  |
-| ------------------------ | ---------------------- | ----------- | -------------------------------------------------------------------------------------------------- | ----------------------------------------------------- |
-| t2d-suzuki24_prscsx-ma> | Additive + Partitioned | ~1 M | Full genome wide multi-ancestry PRS for Suzuki (PRS-Csx meta)                            | [38374256](https://pubmed.ncbi.nlm.nih.gov/38374256/) |
-| t2d-suzuki24_prscsx-\<ancestry\> | Additive + Partitioned | >500k | Full genome wide ancestry-specific PRS for Suzuki (PRS-Cs) \/eur/afr/eas/sas/safr/his\>                           | [38374256](https://pubmed.ncbi.nlm.nih.gov/38374256/) |
-| t2dp-suzuki24-ma         | Additive + Partitioned | 1289        | Multiancestry weighted Suzuki T2D index variant PRS, and pPS from hard-clustering analyses.        | [38374256](https://pubmed.ncbi.nlm.nih.gov/38374256/) |
-| t2dp-suzuki24-\<ancestry\> | Additive + Partitioned | 1128 - 1285 | As above but weighted for specific ancestries \<eur/afr/safr/eas/sas/his\>                           | [38374256](https://pubmed.ncbi.nlm.nih.gov/38374256/) |
-| t2dp-smith24-ma          | Additive + Partitioned | 353         | Multiancestry cluster-weighted Smith T2D index variant PRS, and pPS from soft-clustering analyses. | [38443691](https://pubmed.ncbi.nlm.nih.gov/38443691/) |
-| t2dp-smith24-\<ancestry\>  | Additive + Partitioned | 25 - 490    |  As above but from ancestry-specific soft clustering \<eur/afr/eas/amr\>.                            | [38443691](https://pubmed.ncbi.nlm.nih.gov/38443691/) |
-| t2d-mahajan22-ma         | Additive               | 338         | Older PRS from Mahajan et al composed of multiancestry index variants.                             | [35551307](https://pubmed.ncbi.nlm.nih.gov/35551307/) |
-| t2d-mahajan-prscsx-eur> | Additive + Partitioned | >500k | Genome wide European ancestry PRS for Mahajan (PRS-Cs)                           | [38374256](https://pubmed.ncbi.nlm.nih.gov/38374256/) |
-| t2dp-udler18             | Additive + Partitioned | 67          | T2D pPS from first soft-clustering analysis.                                                       | [30240442](https://pubmed.ncbi.nlm.nih.gov/30240442/) |
+| Flag | Method | Variants | Description | PMID |
+| --- | --- | ---: | --- | --- |
+| `t2d-suzuki24-prscsx-ma` | Additive + Partitioned | ~1 M | Full genome-wide multi-ancestry PRS for Suzuki (PRS-CSx meta). | [38374256](https://pubmed.ncbi.nlm.nih.gov/38374256/) |
+| `t2d-suzuki24-prscsx-<ancestry>` | Additive + Partitioned | >500k | Full genome-wide ancestry-specific PRS for Suzuki (PRS-CSx), where `<ancestry>` is one of `eur`, `afr`, `eas`, `sas`, `safr`, or `his`. | [38374256](https://pubmed.ncbi.nlm.nih.gov/38374256/) |
+| `t2dp-suzuki24-ma` | Additive + Partitioned | 1289 | Multiancestry weighted Suzuki T2D index variant PRS, and pPS from hard-clustering analyses. | [38374256](https://pubmed.ncbi.nlm.nih.gov/38374256/) |
+| `t2dp-suzuki24-<ancestry>` | Additive + Partitioned | 1128 - 1285 | As above but weighted for specific ancestries `<eur/afr/safr/eas/sas/his>`. | [38374256](https://pubmed.ncbi.nlm.nih.gov/38374256/) |
+| `t2dp-smith24-ma` | Additive + Partitioned | 353 | Multiancestry cluster-weighted Smith T2D index variant PRS, and pPS from soft-clustering analyses. | [38443691](https://pubmed.ncbi.nlm.nih.gov/38443691/) |
+| `t2dp-smith24-<ancestry>` | Additive + Partitioned | 25 - 490 | As above but from ancestry-specific soft clustering `<eur/afr/eas/amr>`. | [38443691](https://pubmed.ncbi.nlm.nih.gov/38443691/) |
+| `t2d-mahajan22-ma` | Additive | 338 | Older PRS from Mahajan et al composed of multiancestry index variants. | [35551307](https://pubmed.ncbi.nlm.nih.gov/35551307/) |
+| `t2d-mahajan22-prscsx-eur` | Additive + Partitioned | >500k | Genome-wide European ancestry PRS for Mahajan (PRS-CSx). | [38374256](https://pubmed.ncbi.nlm.nih.gov/38374256/) |
+| `t2dp-udler18` | Additive + Partitioned | 67 | T2D pPS from first soft-clustering analysis. | [30240442](https://pubmed.ncbi.nlm.nih.gov/30240442/) |
 
 ### Other
 
-| Flag           | Phenotype      | Method                        | Variants | Description                                                                                          | PMID                                                  |
-| -------------- | -------------- | ----------------------------- | -------- | ---------------------------------------------------------------------------------------------------- | ----------------------------------------------------- |
-| cdgrs-sharp25 | Celiac Disease | HLA Interaction + Partitioned | 42       | Modernized Celiac disease PRS and pPS with similar model to "GRS2x", utilized for combined screening. | [32790217](https://pubmed.ncbi.nlm.nih.gov/32790217/) |
+| Flag | Phenotype | Method | Variants | Description | PMID |
+| --- | --- | --- | ---: | --- | --- |
+| `cdgrs-sharp25` | Celiac Disease | HLA Interaction + Partitioned | 42 | Modernized Celiac disease PRS and pPS with similar model to "GRS2x", utilized for combined screening. | [32790217](https://pubmed.ncbi.nlm.nih.gov/32790217/) |
 
-## Additional Features
+## Features
 
 ### HLA Interaction PRS (+GRS2x Update)
 
@@ -128,17 +134,18 @@ PRSedm features a complete algorithm for GRS which incorporate HLA interaction t
 
 #### HLA Type Estimation and LD Tiebreak
 
-HLA alleles can be estimated by proxy (or tag) single nucleotide polymorphisms alone and predictions are output e.g. (DR3-DQ2.5/DR3-DQ2.5) Due to imperfect proxy SNPs >2 HLA calls can be made in interaction scores such as GRS2, a probablistic tiebreaker algorithm using a HLA reference frequencies (Klitz et al) now resolves impossible numbers of calls without excluding any samples.
+HLA alleles can be estimated by proxy (or tag) single nucleotide polymorphisms alone and predictions are output e.g. `(DR3-DQ2.5/DR3-DQ2.5)`. Due to imperfect proxy SNPs, >2 HLA calls can be made in interaction scores such as GRS2, and a probabilistic tiebreaker algorithm using HLA reference frequencies (Klitz et al) now resolves impossible numbers of calls without excluding any samples.
 
-### Missing variant mean effect imputation (optional)
+### Missing variant mean effect estimation (optional)
 
-PRSedm optionally uses Hardy-Weinberg Equilibrium with a reference VCF/BCF legend (ensure you have variant frequency coded as 'AF', genotypes not required) to impute the mean effect size for missing SNPs, handle missing variants, and enable static normalization.
-- dbsnp hg38 - [TOPMED Bravo Freeze 8](https://legacy.bravo.sph.umich.edu/freeze8/hg38/downloads), or [NCBI](https://ftp.ncbi.nih.gov/snp/latest_release/VCF/) ('AF' field added) are recommended.
-- dbsnp hg19 - [1000 Genomes](https://mathgen.stats.ox.ac.uk/impute/1000GP_Phase3.html), [Haplotype Reference Consortium](https://www.sanger.ac.uk/collaboration/haplotype-reference-consortium/), [NCBI GRCh37](https://ftp.ncbi.nih.gov/snp/pre_build152/organisms/human_9606_b151_GRCh37p13/VCF/) recommended.
+PRSedm optionally uses Hardy-Weinberg Equilibrium with a reference VCF/BCF legend (ensure you have variant frequency coded as `AF`, genotypes not required) to estimate the mean effect size for missing SNPs, handle missing variants, and enable static normalization.
 
-### Minimum and Maximum Normalization (optional)
+- dbSNP hg38 - [TOPMED Bravo Freeze 8](https://legacy.bravo.sph.umich.edu/freeze8/hg38/downloads), or [NCBI](https://ftp.ncbi.nih.gov/snp/latest_release/VCF/) (`AF` field added) are recommended.
+- dbSNP hg19 - [1000 Genomes](https://mathgen.stats.ox.ac.uk/impute/1000GP_Phase3.html), [Haplotype Reference Consortium](https://www.sanger.ac.uk/collaboration/haplotype-reference-consortium/), [NCBI GRCh37](https://ftp.ncbi.nih.gov/snp/pre_build152/organisms/human_9606_b151_GRCh37p13/VCF/) recommended.
 
-PRSedm hardcodes static normalization of minimum and maximum potential risk contribution (no risk alleles vs all risk alleles) creating a scale of 0-1. Static normalization with imputation ensures that PRS values translate to a common relative risk scale across datasets. Imputation must be enabled, or all variants must be present.
+### Minimum and Maximum Normalization
+
+PRSedm hardcodes static normalization of minimum and maximum potential risk contribution (no risk alleles vs all risk alleles) creating a scale of 0-1. Static normalization with estimation ensures that PRS values translate to a common relative risk scale across datasets. If variants are missing and no estimation reference is supplied, normalization is skipped automatically and a warning is emitted.
 
 ## Development
 

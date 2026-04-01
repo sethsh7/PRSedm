@@ -94,7 +94,8 @@ def get_hla_int_stats(db_path, table_name):
         # Filter rows_null to exclude duplicates already present in
         # non_null_pairs
         unique_null_rows = [
-            row for row in rows_null
+            row
+            for row in rows_null
             # Resolve (NULL, DQ81) to (DQ81, DQ81)
             if (row[1], row[1]) not in non_null_pairs
         ]
@@ -175,8 +176,7 @@ def analyze_and_update_json(json_path, db_path):
 
         if method in ["additive", "grouped"] and db_table:
             # Fetch beta statistics
-            min_beta, max_beta, max_score, min_score = get_beta_stats(
-                db_path, db_table)
+            min_beta, max_beta, max_score, min_score = get_beta_stats(db_path, db_table)
             updated_data[score_name] = {
                 "min": min_score,
                 "max": max_score,
@@ -185,13 +185,19 @@ def analyze_and_update_json(json_path, db_path):
         elif method == "hla_int" and db_table and "db_int" in meta:
             # Process db_table as additive
             min_main, max_main, main_max_score, main_min_score = get_beta_stats(
-                db_path, db_table)
+                db_path, db_table
+            )
 
             # Process db_int for HLA interactions
             min_hla, max_hla = get_hla_int_stats(db_path, meta["db_int"])
 
             # Calculate overall scores
-            if main_min_score is not None and main_max_score is not None and min_hla is not None and max_hla is not None:
+            if (
+                main_min_score is not None
+                and main_max_score is not None
+                and min_hla is not None
+                and max_hla is not None
+            ):
                 overall_min = main_min_score + min_hla
                 overall_max = main_max_score + max_hla
                 updated_data[score_name] = {
@@ -210,7 +216,7 @@ if __name__ == "__main__":
     # Locate the JSON and database files
     script_location = os.path.dirname(os.path.abspath(__file__))
     json_path = os.path.join(script_location, "prs_meta.json")
-    db_path = os.path.join(script_location, "../", "SQL", "variants.db")
+    db_path = "variants.db"
 
     # Analyze PRS scores and update JSON
     analyze_and_update_json(json_path, db_path)

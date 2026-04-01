@@ -1,13 +1,12 @@
 from setuptools import setup, find_packages
 from pathlib import Path
 
-# Read the long description from README.md
 this_directory = Path(__file__).parent
-long_description = (this_directory / "README.md").read_text()
+long_description = (this_directory / "README.md").read_text(encoding="utf-8")
 
 setup(
     name="prsedm",
-    version="1.1.0",
+    version="1.3.0",
     description=(
         "PRSedm (Polygenic Risk Score Extension for Diabetes Mellitus) "
         "is a package for local and remote generation of "
@@ -16,7 +15,7 @@ setup(
     long_description=long_description,
     long_description_content_type="text/markdown",
     author="Seth A. Sharp",
-    author_email="ssharp@stanford.edu",
+    author_email="ssharp@broadinstitute.org",
     packages=find_packages(include=["prsedm", "prsedm.*"]),
     entry_points={
         "console_scripts": [
@@ -25,12 +24,9 @@ setup(
     },
     install_requires=[
         "joblib>=1.3",
+        "numpy<2",
         "pandas>=2.2",
         "pysam>=0.22",
     ],
-    package_data={
-        "prsedm.extensions": ["JSON/*.json"],
-    },
-    include_package_data=True,
     python_requires=">=3.9",
 )

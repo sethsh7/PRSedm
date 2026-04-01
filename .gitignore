@@ -5,9 +5,12 @@ __pycache__/
 # Custom
 private/
 scratch/
+databases/
+test/
 
-#The large SQL database
+#SQL and JSON
 *.db
+*.json
 
 # Distribution / packaging
 .Python
